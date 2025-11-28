@@ -4,8 +4,8 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/fish-shoal-app/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src/fish-shoal-renderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/fish-shoal-simulator/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/fish-shoal-gui/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

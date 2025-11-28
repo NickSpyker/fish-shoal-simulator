@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-use fish_shoal_gui::{Error, FishShoalGui};
-use fish_shoal_simulator::{Config, FishShoalSimulator};
-
-fn main() -> Result<(), Error> {
-    let mut simulator =
-        FishShoalSimulator::new(Config::default()).map_err(|err| Error::Simulator(err))?;
-
-    simulator
-        .run(|_out| Config::default())
-        .map_err(|err| Error::Simulator(err))?;
-
-    let gui = FishShoalGui::new();
-
-    gui.run()
+#[derive(Debug, Eq, PartialEq)]
+pub struct Config {
+    pub width: usize,
+    pub height: usize,
+    pub nb_entities: usize,
 }
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            width: 100,
+            height: 100,
+            nb_entities: 100,
+        }
+    }
+}
+
+impl Config {}

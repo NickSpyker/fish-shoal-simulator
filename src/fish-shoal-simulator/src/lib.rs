@@ -13,3 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+mod components;
+mod config;
+mod entities;
+mod error;
+mod simulator;
+mod simulator_output;
+mod system_bundle;
+mod systems;
+
+pub use components::{DeltaTime, Position, Speed, Velocity};
+pub use config::Config;
+pub use error::Error;
+pub use simulator::FishShoalSimulator;
+pub use simulator_output::SimulatorOutput;
+
+pub(crate) use entities::*;
+pub(crate) use system_bundle::SystemBundle;
+pub(crate) use systems::*;

@@ -14,18 +14,28 @@
  * limitations under the License.
  */
 
-use fish_shoal_gui::{Error, FishShoalGui};
-use fish_shoal_simulator::{Config, FishShoalSimulator};
+use std::{
+    error,
+    fmt::{Display, Formatter, Result},
+};
 
-fn main() -> Result<(), Error> {
-    let mut simulator =
-        FishShoalSimulator::new(Config::default()).map_err(|err| Error::Simulator(err))?;
-
-    simulator
-        .run(|_out| Config::default())
-        .map_err(|err| Error::Simulator(err))?;
-
-    let gui = FishShoalGui::new();
-
-    gui.run()
+#[derive(Debug)]
+pub enum Error {
+    Create(String),
+    Run(String),
 }
+
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(
+            f,
+            "Fish Shoal Simulator failed to {}",
+            match self {
+                Self::Create(err) => format!("create: {err}"),
+                Self::Run(err) => format!("run: {err}"),
+            }
+        )
+    }
+}
+
+impl error::Error for Error {}

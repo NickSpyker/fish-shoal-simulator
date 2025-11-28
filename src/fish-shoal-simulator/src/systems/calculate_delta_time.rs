@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-use fish_shoal_gui::{Error, FishShoalGui};
-use fish_shoal_simulator::{Config, FishShoalSimulator};
+use crate::DeltaTime;
+use shipyard::UniqueViewMut;
 
-fn main() -> Result<(), Error> {
-    let mut simulator =
-        FishShoalSimulator::new(Config::default()).map_err(|err| Error::Simulator(err))?;
+pub struct CalculateDeltaTime;
 
-    simulator
-        .run(|_out| Config::default())
-        .map_err(|err| Error::Simulator(err))?;
-
-    let gui = FishShoalGui::new();
-
-    gui.run()
+impl CalculateDeltaTime {
+    pub fn system(mut delta_time: UniqueViewMut<DeltaTime>) {
+        delta_time.calc()
+    }
 }

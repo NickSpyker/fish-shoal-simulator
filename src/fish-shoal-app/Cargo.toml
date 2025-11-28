@@ -11,3 +11,5 @@ name = "fish-shoal"
 path = "src/main.rs"
 
 [dependencies]
+fish-shoal-simulator.workspace = true
+fish-shoal-gui.workspace = true

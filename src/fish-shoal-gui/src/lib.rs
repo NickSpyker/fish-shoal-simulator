@@ -14,18 +14,8 @@
  * limitations under the License.
  */
 
-use fish_shoal_gui::{Error, FishShoalGui};
-use fish_shoal_simulator::{Config, FishShoalSimulator};
+mod error;
+mod gui;
 
-fn main() -> Result<(), Error> {
-    let mut simulator =
-        FishShoalSimulator::new(Config::default()).map_err(|err| Error::Simulator(err))?;
-
-    simulator
-        .run(|_out| Config::default())
-        .map_err(|err| Error::Simulator(err))?;
-
-    let gui = FishShoalGui::new();
-
-    gui.run()
-}
+pub use error::Error;
+pub use gui::FishShoalGui;

@@ -14,18 +14,26 @@
  * limitations under the License.
  */
 
-use fish_shoal_gui::{Error, FishShoalGui};
-use fish_shoal_simulator::{Config, FishShoalSimulator};
+use crate::{CalculateDeltaTime, Motion};
+use shipyard::{
+    error::{AddWorkload, RunWorkload}, Workload,
+    World,
+};
 
-fn main() -> Result<(), Error> {
-    let mut simulator =
-        FishShoalSimulator::new(Config::default()).map_err(|err| Error::Simulator(err))?;
+pub struct SystemBundle;
 
-    simulator
-        .run(|_out| Config::default())
-        .map_err(|err| Error::Simulator(err))?;
+impl SystemBundle {
+    const LABEL: &str = "systems";
 
-    let gui = FishShoalGui::new();
+    pub fn run(world: &World) -> Result<(), RunWorkload> {
+        world.run_workload(Self::LABEL)
+    }
 
-    gui.run()
+    pub fn build(world: &World) -> Result<(), AddWorkload> {
+        Workload::new(Self::LABEL)
+            .with_system(CalculateDeltaTime::system)
+            .with_barrier()
+            .with_system(Motion::system)
+            .add_to_world(&world)
+    }
 }

@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-use fish_shoal_gui::{Error, FishShoalGui};
-use fish_shoal_simulator::{Config, FishShoalSimulator};
+mod delta_time;
+mod position;
+mod speed;
+mod velocity;
 
-fn main() -> Result<(), Error> {
-    let mut simulator =
-        FishShoalSimulator::new(Config::default()).map_err(|err| Error::Simulator(err))?;
-
-    simulator
-        .run(|_out| Config::default())
-        .map_err(|err| Error::Simulator(err))?;
-
-    let gui = FishShoalGui::new();
-
-    gui.run()
-}
+pub use delta_time::DeltaTime;
+pub use position::Position;
+pub use speed::Speed;
+pub use velocity::Velocity;
