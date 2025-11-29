@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
+mod entities;
 mod sidebar;
 mod simulation;
 
+pub use entities::Entities;
 pub use sidebar::SideBar;
 pub use simulation::Simulation;
 

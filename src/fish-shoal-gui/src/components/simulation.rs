@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-use crate::{FishShoalGui, UiComponent, Utils};
+use crate::components::Entities;
+use crate::{FishShoalGui, UiComponent};
 use eframe::{
     egui::{CentralPanel, Context},
     emath::{Pos2, Rect, Vec2},
@@ -40,8 +41,6 @@ impl UiComponent for Simulation {
                 Vec2::new(app.config.width as f32, app.config.height as f32),
             );
 
-            let origin = config_rect.left_top();
-
             painter.rect_stroke(
                 config_rect,
                 0.0,
@@ -50,19 +49,7 @@ impl UiComponent for Simulation {
             );
 
             if let Ok(output) = app.data_receiver.recv() {
-                let count: usize = output.positions.len();
-                for i in 0..count {
-                    let position = output.positions[i];
-                    let velocity = output.velocities[i];
-                    let speed = output.speeds[i];
-
-                    let screen_x = origin.x + position.x;
-                    let screen_y = origin.y + position.y;
-
-                    let color = Utils::speed_to_color(speed.0);
-
-                    painter.circle_filled(Pos2::new(screen_x, screen_y), 2.0, color);
-                }
+                Entities::render_all(painter, output, config_rect.left_top());
             }
         });
     }
