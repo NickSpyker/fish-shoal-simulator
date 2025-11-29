@@ -24,15 +24,15 @@ use fish_shoal_simulator::{Config, SimulatorOutput};
 use std::sync::mpsc::{Receiver, Sender};
 
 pub struct FishShoalGui {
-    sim_data: Receiver<SimulatorOutput>,
-    sim_config: Sender<Config>,
+    data_receiver: Receiver<SimulatorOutput>,
+    config_sender: Sender<Config>,
 }
 
 impl FishShoalGui {
-    pub fn new(sim_data: Receiver<SimulatorOutput>, sim_config: Sender<Config>) -> Self {
+    pub fn new(data_receiver: Receiver<SimulatorOutput>, config_sender: Sender<Config>) -> Self {
         Self {
-            sim_data,
-            sim_config,
+            data_receiver,
+            config_sender,
         }
     }
 
@@ -59,7 +59,7 @@ impl App for FishShoalGui {
             let rect = ui.max_rect();
             let painter = ui.painter_at(rect);
 
-            if let Some(output) = self.sim_data.iter().last() {
+            if let Some(output) = self.data_receiver.try_iter().last() {
                 for position in &output.positions {
                     painter.circle_filled(Pos2::new(position.x, position.y), 2.0, Color32::RED);
                 }
