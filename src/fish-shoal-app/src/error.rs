@@ -18,7 +18,6 @@ use std::{
     any::Any,
     error,
     fmt::{Display, Formatter},
-    sync::mpsc::RecvError,
 };
 
 #[derive(Debug)]
@@ -26,7 +25,6 @@ pub enum Error {
     Gui(fish_shoal_gui::Error),
     Simulator(fish_shoal_simulator::Error),
     Thread(Box<dyn Any + Send + 'static>),
-    Receiver(RecvError),
 }
 
 impl Display for Error {
@@ -38,7 +36,6 @@ impl Display for Error {
                 Self::Gui(source) => format!("GUI: {source}"),
                 Self::Simulator(source) => format!("Simulator: {source}"),
                 Self::Thread(source) => format!("thread: {:?}", source),
-                Self::Receiver(source) => format!("receiver: {source}"),
             }
         )
     }
@@ -50,7 +47,6 @@ impl error::Error for Error {
             Self::Gui(source) => Some(source),
             Self::Simulator(source) => Some(source),
             Self::Thread(_) => None,
-            Self::Receiver(source) => Some(source),
         }
     }
 }

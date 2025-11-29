@@ -55,11 +55,13 @@ impl FishShoalGui {
 
 impl App for FishShoalGui {
     fn update(&mut self, ctx: &Context, _: &mut Frame) {
+        if self.config_sender.send(Config::default()).is_err() {
+            return;
+        }
+
         egui::CentralPanel::default().show(ctx, |ui| {
             let rect = ui.max_rect();
             let painter = ui.painter_at(rect);
-
-            let _ = self.config_sender.send(Config::default());
 
             if let Some(output) = self.data_receiver.try_iter().last() {
                 for position in &output.positions {
