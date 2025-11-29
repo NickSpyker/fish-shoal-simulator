@@ -59,6 +59,8 @@ impl App for FishShoalGui {
             let rect = ui.max_rect();
             let painter = ui.painter_at(rect);
 
+            let _ = self.config_sender.send(Config::default());
+
             if let Some(output) = self.data_receiver.try_iter().last() {
                 for position in &output.positions {
                     painter.circle_filled(Pos2::new(position.x, position.y), 2.0, Color32::RED);

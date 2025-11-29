@@ -49,12 +49,13 @@ impl FishShoalApp {
             let data_sender = self.sim_data_sender;
             let config_receiver = self.sim_config_receiver;
 
-            let mut is_running: bool = true;
-            while is_running {
-                let data_sender = data_sender.clone();
+            loop {
+                let config: Config = match config_receiver.recv() {
+                    Ok(cfg) => cfg,
+                    Err(_) => break,
+                };
 
-                let config: Config = config_receiver.recv().map_err(Error::Receiver)?;
-                is_running = config.is_running;
+                let data_sender = data_sender.clone();
 
                 sim.run(move |output: SimulatorOutput| {
                     data_sender
