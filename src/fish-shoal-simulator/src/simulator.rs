@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-use crate::{Config, DeltaTime, Error, Fish, Position, SimulatorOutput, SystemBundle};
-use shipyard::{IntoIter, View, World};
+use crate::{Area, Config, DeltaTime, Error, Fish, Position, SimulatorOutput, SystemBundle};
+use shipyard::{IntoIter, UniqueViewMut, View, World};
 use std::cmp::Ordering;
 
 #[derive(Default)]
@@ -26,18 +26,27 @@ pub struct FishShoalSimulator {
 
 impl FishShoalSimulator {
     pub fn new() -> Result<Self, Error> {
-        let world = World::new();
+        let mut world = World::new();
         SystemBundle::build(&world).map_err(|err| Error::Create(err.to_string()))?;
         world.add_unique(DeltaTime::new());
+        let config = Config::default();
+        world.add_unique(Area::from_config(&config));
+        Fish::add(&mut world, config.nb_entities, config.width, config.height);
         Ok(Self {
             entities: world,
-            config: Config::default(),
+            config,
         })
     }
 
     pub fn setup(&mut self, config: Config) {
-        self.config.width = config.width;
-        self.config.height = config.height;
+        if self.config.width != config.width || self.config.height != config.height {
+            self.entities.run(|mut area: UniqueViewMut<Area>| {
+                area.width = config.width as f32;
+                area.height = config.height as f32;
+            });
+            self.config.width = config.width;
+            self.config.height = config.height;
+        }
 
         match config.nb_entities.cmp(&self.config.nb_entities) {
             Ordering::Greater => {

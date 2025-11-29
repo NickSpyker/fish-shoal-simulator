@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use crate::{CalculateDeltaTime, Motion};
+use crate::{CalculateDeltaTime, Motion, OutOfBound};
 use shipyard::{
     error::{AddWorkload, RunWorkload}, Workload,
     World,
@@ -34,6 +34,8 @@ impl SystemBundle {
             .with_system(CalculateDeltaTime::system)
             .with_barrier()
             .with_system(Motion::system)
+            .with_barrier()
+            .with_system(OutOfBound::system)
             .add_to_world(&world)
     }
 }

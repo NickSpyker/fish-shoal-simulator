@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
-mod area;
-mod delta_time;
-mod position;
-mod speed;
-mod velocity;
+use crate::Config;
+use shipyard::Unique;
 
-pub use area::Area;
-pub use delta_time::DeltaTime;
-pub use position::Position;
-pub use speed::Speed;
-pub use velocity::Velocity;
+#[derive(Unique, Debug, Copy, Clone, PartialOrd, PartialEq)]
+pub struct Area {
+    pub width: f32,
+    pub height: f32,
+}
+
+impl Area {
+    pub fn new(width: f32, height: f32) -> Self {
+        Self { width, height }
+    }
+
+    pub fn from_config(config: &Config) -> Self {
+        Self::new(config.width as f32, config.height as f32)
+    }
+}

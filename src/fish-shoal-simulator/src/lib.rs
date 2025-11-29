@@ -23,7 +23,7 @@ mod simulator_output;
 mod system_bundle;
 mod systems;
 
-pub use components::{DeltaTime, Position, Speed, Velocity};
+pub use components::{Area, DeltaTime, Position, Speed, Velocity};
 pub use config::Config;
 pub use error::Error;
 pub use simulator::FishShoalSimulator;

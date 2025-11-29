@@ -26,6 +26,7 @@ use std::sync::mpsc::{Receiver, Sender};
 pub struct FishShoalGui {
     data_receiver: Receiver<SimulatorOutput>,
     config_sender: Sender<Config>,
+    initialized: bool,
     config: Config,
     available_area: Vec2,
 }
@@ -35,6 +36,7 @@ impl FishShoalGui {
         Self {
             data_receiver,
             config_sender,
+            initialized: false,
             config: Config::default(),
             available_area: Vec2::default(),
         }
@@ -118,6 +120,12 @@ impl App for FishShoalGui {
                 }
             }
         });
+
+        if !self.initialized {
+            self.config.width = self.available_area.x as usize;
+            self.config.height = self.available_area.y as usize;
+            self.initialized = true;
+        }
 
         ctx.request_repaint();
     }

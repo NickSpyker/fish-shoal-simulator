@@ -16,6 +16,8 @@
 
 mod calculate_delta_time;
 mod motion;
+mod out_of_bound;
 
 pub use calculate_delta_time::CalculateDeltaTime;
 pub use motion::Motion;
+pub use out_of_bound::OutOfBound;
