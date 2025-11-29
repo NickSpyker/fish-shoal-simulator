@@ -26,6 +26,7 @@ use std::sync::mpsc::{Receiver, Sender};
 pub struct FishShoalGui {
     data_receiver: Receiver<SimulatorOutput>,
     config_sender: Sender<Config>,
+    config: Config,
 }
 
 impl FishShoalGui {
@@ -33,6 +34,7 @@ impl FishShoalGui {
         Self {
             data_receiver,
             config_sender,
+            config: Config::default(),
         }
     }
 
@@ -55,7 +57,7 @@ impl FishShoalGui {
 
 impl App for FishShoalGui {
     fn update(&mut self, ctx: &Context, _: &mut Frame) {
-        if self.config_sender.send(Config::default()).is_err() {
+        if self.config_sender.send(self.config).is_err() {
             return;
         }
 
@@ -63,7 +65,7 @@ impl App for FishShoalGui {
             let rect = ui.max_rect();
             let painter = ui.painter_at(rect);
 
-            if let Some(output) = self.data_receiver.try_iter().last() {
+            if let Ok(output) = self.data_receiver.recv() {
                 for position in &output.positions {
                     painter.circle_filled(Pos2::new(position.x, position.y), 2.0, Color32::RED);
                 }
