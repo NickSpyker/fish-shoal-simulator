@@ -16,6 +16,7 @@
 
 mod area;
 mod delta_time;
+mod idle;
 mod is_fish;
 mod position;
 mod speed;
@@ -26,6 +27,7 @@ mod velocity;
 
 pub use area::Area;
 pub use delta_time::DeltaTime;
+pub use idle::Idle;
 pub use is_fish::IsFish;
 pub use position::Position;
 pub use speed::Speed;

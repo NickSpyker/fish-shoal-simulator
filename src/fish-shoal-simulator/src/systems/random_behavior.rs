@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-use crate::{Speed, Stress, TargetSpeed, TargetVelocity, Velocity};
+use crate::{Idle, Speed, Stress, TargetSpeed, TargetVelocity, Velocity};
 use rand::{rngs::ThreadRng, Rng};
 use rayon::prelude::*;
-use shipyard::{IntoIter, ViewMut};
-
-const CHANCE_TO_CHANGE_DIRECTION: f64 = 0.1;
-const CHANCE_TO_CHANGE_SPEED: f64 = 0.05;
-const CHANCE_TO_CHANGE_STRESS: f64 = 0.001;
+use shipyard::{IntoIter, UniqueView, ViewMut};
 
 pub struct RandomBehavior;
 
@@ -30,23 +26,28 @@ impl RandomBehavior {
         mut target_velocities: ViewMut<TargetVelocity>,
         mut target_speeds: ViewMut<TargetSpeed>,
         mut stress: ViewMut<Stress>,
+        idle: UniqueView<Idle>,
     ) {
         (&mut target_velocities, &mut target_speeds, &mut stress)
             .par_iter()
             .for_each(|(target_vel, target_speed, stress)| {
                 let mut rng: ThreadRng = rand::rng();
 
-                if rng.random_bool(CHANCE_TO_CHANGE_DIRECTION) {
+                if rng.random_bool(idle.chance_to_change_direction) {
                     let random_direction = Velocity::new();
-                    target_vel.0.lerp(&random_direction, rng.random_range(0.0..1.0));
+                    target_vel
+                        .0
+                        .lerp(&random_direction, rng.random_range(0.0..1.0));
                 }
 
-                if rng.random_bool(CHANCE_TO_CHANGE_SPEED) {
+                if rng.random_bool(idle.chance_to_change_speed) {
                     let random_speed = Speed::new_random(10.0, 100.0);
-                    target_speed.0.lerp(&random_speed, rng.random_range(0.0..1.0));
+                    target_speed
+                        .0
+                        .lerp(&random_speed, rng.random_range(0.0..1.0));
                 }
 
-                if rng.random_bool(CHANCE_TO_CHANGE_STRESS) {
+                if rng.random_bool(idle.chance_to_change_stress) {
                     let random_stress = Stress::new_random();
                     stress.lerp(&random_stress, rng.random_range(0.0..1.0));
                 }

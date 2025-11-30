@@ -14,26 +14,19 @@
  * limitations under the License.
  */
 
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub struct Config {
-    pub is_running: bool,
-    pub paused: bool,
-    pub width: usize,
-    pub height: usize,
-    pub nb_entities: usize,
+use crate::Config;
+use shipyard::Unique;
+
+#[derive(Unique)]
+pub struct Idle {
     pub chance_to_change_direction: f64,
     pub chance_to_change_speed: f64,
     pub chance_to_change_stress: f64,
 }
 
-impl Default for Config {
+impl Default for Idle {
     fn default() -> Self {
         Self {
-            is_running: true,
-            paused: false,
-            width: 1_920,
-            height: 1_080,
-            nb_entities: 500,
             chance_to_change_direction: 0.1,
             chance_to_change_speed: 0.05,
             chance_to_change_stress: 0.001,
@@ -41,8 +34,10 @@ impl Default for Config {
     }
 }
 
-impl Config {
-    pub fn pause(&mut self) {
-        self.paused = !self.paused;
+impl Idle {
+    pub fn update(&mut self, config: &Config) {
+        self.chance_to_change_direction = config.chance_to_change_direction;
+        self.chance_to_change_speed = config.chance_to_change_speed;
+        self.chance_to_change_stress = config.chance_to_change_stress;
     }
 }

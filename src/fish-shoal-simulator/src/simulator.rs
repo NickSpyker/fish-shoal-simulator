@@ -15,7 +15,8 @@
  */
 
 use crate::{
-    Area, Config, DeltaTime, Error, Fish, Position, SimulatorOutput, Speed, SystemBundle, Velocity,
+    Area, Config, DeltaTime, Error, Fish, Idle, Position, SimulatorOutput, Speed, SystemBundle,
+    Velocity,
 };
 use shipyard::{IntoIter, UniqueViewMut, View, World};
 use std::cmp::Ordering;
@@ -29,11 +30,17 @@ pub struct FishShoalSimulator {
 impl FishShoalSimulator {
     pub fn new() -> Result<Self, Error> {
         let mut world = World::new();
+
         SystemBundle::build(&world).map_err(|err| Error::Create(err.to_string()))?;
-        world.add_unique(DeltaTime::new());
+
         let config = Config::default();
+
+        world.add_unique(DeltaTime::new());
         world.add_unique(Area::from_config(&config));
+        world.add_unique(Idle::default());
+
         Fish::add(&mut world, config.nb_entities, config.width, config.height);
+
         Ok(Self {
             entities: world,
             config,
@@ -68,6 +75,9 @@ impl FishShoalSimulator {
             }
             _ => (),
         }
+
+        self.entities
+            .run(|mut idle: UniqueViewMut<Idle>| idle.update(&config));
     }
 
     pub fn run<F>(&mut self, mut io: F) -> Result<(), Error>
