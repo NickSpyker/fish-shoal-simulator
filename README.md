@@ -9,6 +9,10 @@ flock behaviors.</p>
 |:-------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------:|
 | [\>> Download <<](https://github.com/NickSpyker/fish-shoal-simulator/releases/latest/download/fish-shoal-simulator-windows.exe) | [\>> Download <<](https://github.com/NickSpyker/fish-shoal-simulator/releases/latest/download/fish-shoal-simulator-linux) | [\>> Download <<](https://github.com/NickSpyker/fish-shoal-simulator/releases/latest/download/fish-shoal-simulator-macos) |
 
+### Demo
+
+![fish-shoal-simulator.gif](screenshots/fish-shoal-simulator.gif)
+
 ## License
 
 See [LICENSE-APACHE](./LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.
