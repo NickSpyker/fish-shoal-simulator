@@ -14,29 +14,10 @@
  * limitations under the License.
  */
 
-mod alignment_radius;
-mod area;
-mod attraction_radius;
-mod blind_spot;
-mod collision_radius;
-mod delta_time;
-mod idle;
-mod is_fish;
-mod position;
-mod speed;
-mod stress;
-mod target_speed;
-mod target_velocity;
-mod velocity;
-mod wiggle;
+mod angle;
+mod radius;
+mod vec2;
 
-pub use area::Area;
-pub use delta_time::DeltaTime;
-pub use idle::Idle;
-pub use is_fish::IsFish;
-pub use position::Position;
-pub use speed::Speed;
-pub use stress::Stress;
-pub use target_speed::TargetSpeed;
-pub use target_velocity::TargetVelocity;
-pub use velocity::Velocity;
+pub use angle::Angle;
+pub use radius::Radius;
+pub use vec2::Vec2;
