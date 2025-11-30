@@ -15,14 +15,17 @@
  */
 
 use crate::{
-    Config, DeltaTime, Error, Fish, Position, SimulatorOutput, Speed, SystemBundle, Velocity,
+    entities::Fish, systems::*, Config, DeltaTime, Error, Position, SimulatorOutput, Speed,
+    Velocity,
 };
 use shipyard::{
     error::{AddWorkload, RunWorkload},
+    Workload,
     {IntoIter, UniqueView, UniqueViewMut, View, World},
 };
 use std::{cmp::Ordering, mem};
 
+#[derive(Debug)]
 pub struct FishShoalSimulator {
     world: World,
 }
@@ -35,8 +38,17 @@ impl FishShoalSimulator {
         world.add_unique(Config::default());
         world.add_unique(DeltaTime::default());
 
-        Fish::add(&mut world, cfg.entity_count, cfg.width, cfg.height);
-        SystemBundle::build(&world).map_err(|err: AddWorkload| Error::Create(err.to_string()))?;
+        Fish::add(&mut world, cfg.entity_count, cfg);
+
+        Workload::new("sim")
+            .with_system(CalculateDeltaTime::system)
+            .with_barrier()
+            .with_system(Motion::system)
+            .with_system(OutOfBound::system)
+            .with_system(LerpToTarget::system)
+            .with_system(RandomBehavior::system)
+            .add_to_world(&world)
+            .map_err(|err: AddWorkload| Error::Create(err.to_string()))?;
 
         Ok(Self { world })
     }
@@ -45,7 +57,9 @@ impl FishShoalSimulator {
     where
         F: FnMut(SimulatorOutput) -> Config + 'static,
     {
-        SystemBundle::run(&self.world).map_err(|err: RunWorkload| Error::Run(err.to_string()))?;
+        self.world
+            .run_workload("sim")
+            .map_err(|err: RunWorkload| Error::Run(err.to_string()))?;
 
         let mut new_cfg: Config = Config::default();
 
@@ -74,7 +88,7 @@ impl FishShoalSimulator {
         match new_cfg.entity_count.cmp(&old_cfg.entity_count) {
             Ordering::Greater => {
                 let to_add: usize = new_cfg.entity_count - old_cfg.entity_count;
-                Fish::add(&mut self.world, to_add, old_cfg.width, old_cfg.height);
+                Fish::add(&mut self.world, to_add, new_cfg);
             }
             Ordering::Less => {
                 let to_remove: usize = old_cfg.entity_count - new_cfg.entity_count;

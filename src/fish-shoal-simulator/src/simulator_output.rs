@@ -22,5 +22,3 @@ pub struct SimulatorOutput {
     pub velocities: Vec<Velocity>,
     pub speeds: Vec<Speed>,
 }
-
-impl SimulatorOutput {}

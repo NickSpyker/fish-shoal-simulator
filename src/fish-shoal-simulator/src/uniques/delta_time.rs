@@ -20,7 +20,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-#[derive(Unique, Debug, Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Unique, Debug, Copy, Clone)]
 pub struct DeltaTime {
     last_time: Instant,
     delta: Duration,
@@ -28,7 +28,7 @@ pub struct DeltaTime {
 
 impl DeltaTime {
     pub fn calc(&mut self) {
-        let now = Instant::now();
+        let now: Instant = Instant::now();
         self.delta = now - self.last_time;
         self.last_time = now;
     }

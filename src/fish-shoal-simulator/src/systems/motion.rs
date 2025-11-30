@@ -18,6 +18,7 @@ use crate::{DeltaTime, Position, Speed, Velocity};
 use rayon::prelude::*;
 use shipyard::{IntoIter, UniqueView, View, ViewMut};
 
+#[derive(Debug)]
 pub struct Motion;
 
 impl Motion {

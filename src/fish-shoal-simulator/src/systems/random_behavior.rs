@@ -19,6 +19,7 @@ use rand::{rngs::ThreadRng, Rng};
 use rayon::prelude::*;
 use shipyard::{IntoIter, UniqueView, ViewMut};
 
+#[derive(Debug)]
 pub struct RandomBehavior;
 
 impl RandomBehavior {
@@ -26,28 +27,28 @@ impl RandomBehavior {
         mut target_velocities: ViewMut<TargetVelocity>,
         mut target_speeds: ViewMut<TargetSpeed>,
         mut stress: ViewMut<Stress>,
-        config: UniqueView<Config>,
+        cfg: UniqueView<Config>,
     ) {
         (&mut target_velocities, &mut target_speeds, &mut stress)
             .par_iter()
             .for_each(|(target_vel, target_speed, stress)| {
                 let mut rng: ThreadRng = rand::rng();
 
-                if rng.random_bool(config.direction_change_prob) {
+                if rng.random_bool(cfg.direction_change_prob) {
                     let random_direction = Velocity::new();
                     target_vel
                         .0
                         .lerp(&random_direction, rng.random_range(0.0..1.0));
                 }
 
-                if rng.random_bool(config.speed_change_prob) {
+                if rng.random_bool(cfg.speed_change_prob) {
                     let random_speed = Speed::new_random(10.0, 100.0);
                     target_speed
                         .0
                         .lerp(&random_speed, rng.random_range(0.0..1.0));
                 }
 
-                if rng.random_bool(config.stress_change_prob) {
+                if rng.random_bool(cfg.stress_change_prob) {
                     let random_stress = Stress::new_random();
                     stress.lerp(&random_stress, rng.random_range(0.0..1.0));
                 }

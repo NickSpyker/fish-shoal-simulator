@@ -19,20 +19,13 @@ mod entities;
 mod error;
 mod simulator;
 mod simulator_output;
-mod system_bundle;
 mod systems;
 mod types;
 mod uniques;
 
-pub use components::{
-    FishIdentifier, Position, Speed, Stress, TargetSpeed, TargetVelocity, Velocity,
-};
+pub use components::*;
 pub use error::Error;
 pub use simulator::FishShoalSimulator;
 pub use simulator_output::SimulatorOutput;
-pub use types::{Angle, Radius, Vec2};
-pub use uniques::{Config, DeltaTime};
-
-pub(crate) use entities::*;
-pub(crate) use system_bundle::SystemBundle;
-pub(crate) use systems::*;
+pub use types::*;
+pub use uniques::*;

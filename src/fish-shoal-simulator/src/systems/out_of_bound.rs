@@ -18,6 +18,7 @@ use crate::{Config, Position};
 use rayon::prelude::*;
 use shipyard::{IntoIter, UniqueView, ViewMut};
 
+#[derive(Debug)]
 pub struct OutOfBound;
 
 impl OutOfBound {

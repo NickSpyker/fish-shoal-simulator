@@ -18,6 +18,7 @@ use crate::{DeltaTime, Speed, Stress, TargetSpeed, TargetVelocity, Velocity};
 use rayon::prelude::*;
 use shipyard::{IntoIter, UniqueView, View, ViewMut};
 
+#[derive(Debug)]
 pub struct LerpToTarget;
 
 impl LerpToTarget {
@@ -40,7 +41,6 @@ impl LerpToTarget {
         )
             .par_iter()
             .for_each(|(vel, target_vel, speed, target_speed, stress)| {
-
                 let factor: f32 = dt * stress.factor() * 10.0;
 
                 vel.lerp(&target_vel.0, factor);

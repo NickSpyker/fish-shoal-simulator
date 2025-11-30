@@ -17,10 +17,11 @@
 use crate::DeltaTime;
 use shipyard::UniqueViewMut;
 
+#[derive(Debug)]
 pub struct CalculateDeltaTime;
 
 impl CalculateDeltaTime {
     pub fn system(mut delta_time: UniqueViewMut<DeltaTime>) {
-        delta_time.calc()
+        delta_time.calc();
     }
 }

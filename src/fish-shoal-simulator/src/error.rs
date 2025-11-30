@@ -22,8 +22,8 @@ use std::{
 #[derive(Debug)]
 pub enum Error {
     Create(String),
-    Run(String),
     Config(String),
+    Run(String),
 }
 
 impl Display for Error {
@@ -33,8 +33,8 @@ impl Display for Error {
             "Fish Shoal Simulator failed to {}",
             match self {
                 Self::Create(err) => format!("create: {err}"),
-                Self::Run(err) => format!("run: {err}"),
                 Self::Config(err) => format!("config: {err}"),
+                Self::Run(err) => format!("run: {err}"),
             }
         )
     }
