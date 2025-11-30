@@ -38,10 +38,10 @@ impl Entities {
         let speed = data.speeds[idx];
 
         let screen_pos = origin + Vec2::new(position.x, position.y);
-        let color = Utils::speed_to_color(speed.0);
+        let color = Utils::speed_to_color(speed);
 
-        if speed.0 > 0.1 {
-            let vel_vec = Vec2::new(velocity.dx, velocity.dy);
+        if speed > 0.1 {
+            let vel_vec = Vec2::new(velocity.x, velocity.y);
 
             let direction = vel_vec.normalized();
 

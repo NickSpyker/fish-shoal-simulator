@@ -43,7 +43,7 @@ impl LerpToTarget {
             .for_each(|(vel, target_vel, speed, target_speed, stress)| {
                 let factor: f32 = dt * stress.factor() * 10.0;
 
-                vel.lerp(&target_vel.0, factor);
+                vel.0.lerp(target_vel.0, factor);
                 speed.lerp(&target_speed.0, factor);
             })
     }

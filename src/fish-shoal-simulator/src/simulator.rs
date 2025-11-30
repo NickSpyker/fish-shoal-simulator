@@ -66,9 +66,9 @@ impl FishShoalSimulator {
         self.world.run(
             |positions: View<Position>, velocities: View<Velocity>, speeds: View<Speed>| {
                 new_cfg = io(SimulatorOutput {
-                    positions: positions.iter().map(|&position| position).collect(),
-                    velocities: velocities.iter().map(|&position| position).collect(),
-                    speeds: speeds.iter().map(|&position| position).collect(),
+                    positions: positions.iter().map(|position| position.0).collect(),
+                    velocities: velocities.iter().map(|velocity| velocity.0).collect(),
+                    speeds: speeds.iter().map(|&speed| speed.0).collect(),
                 });
             },
         );

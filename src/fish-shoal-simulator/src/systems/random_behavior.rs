@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-use crate::{Config, Speed, Stress, TargetSpeed, TargetVelocity, Velocity};
-use rand::{rngs::ThreadRng, Rng};
+use crate::{Config, Speed, Stress, TargetSpeed, TargetVelocity, Vec2};
+use rand::{Rng, rngs::ThreadRng};
 use rayon::prelude::*;
 use shipyard::{IntoIter, UniqueView, ViewMut};
 
@@ -35,10 +35,10 @@ impl RandomBehavior {
                 let mut rng: ThreadRng = rand::rng();
 
                 if rng.random_bool(cfg.direction_change_prob) {
-                    let random_direction = Velocity::new();
+                    let random_direction = Vec2::random_dir(&mut rng);
                     target_vel
                         .0
-                        .lerp(&random_direction, rng.random_range(0.0..1.0));
+                        .lerp(random_direction, rng.random_range(0.0..1.0));
                 }
 
                 if rng.random_bool(cfg.speed_change_prob) {

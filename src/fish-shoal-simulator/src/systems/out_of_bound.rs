@@ -27,16 +27,16 @@ impl OutOfBound {
         let height: f32 = cfg.height as f32;
 
         (&mut positions).par_iter().for_each(|pos| {
-            if pos.x <= 0.0 {
-                pos.x = width - 1.0;
-            } else if pos.x >= width {
-                pos.x = 1.0;
+            if pos.0.x <= 0.0 {
+                pos.0.x = width - 1.0;
+            } else if pos.0.x >= width {
+                pos.0.x = 1.0;
             }
 
-            if pos.y <= 0.0 {
-                pos.y = height - 1.0;
-            } else if pos.y >= height {
-                pos.y = 1.0;
+            if pos.0.y <= 0.0 {
+                pos.0.y = height - 1.0;
+            } else if pos.0.y >= height {
+                pos.0.y = 1.0;
             }
         });
     }

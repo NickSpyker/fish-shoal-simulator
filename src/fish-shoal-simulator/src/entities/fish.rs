@@ -15,7 +15,7 @@
  */
 
 use crate::{
-    Config, FishIdentifier, Position, Speed, Stress, TargetSpeed, TargetVelocity, Velocity,
+    Config, FishIdentifier, Position, Speed, Stress, TargetSpeed, TargetVelocity, Vec2, Velocity,
 };
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 use shipyard::{EntityId, IntoIter, View, World};
@@ -25,12 +25,18 @@ pub struct Fish;
 
 impl Fish {
     pub fn add(world: &mut World, amount: usize, cfg: Config) {
+        let mut rng: ThreadRng = rand::rng();
+
         for _ in 0..amount {
             world.add_entity((
                 FishIdentifier,
-                Position::new_random(0.0, cfg.width as f32, 0.0, cfg.height as f32),
-                Velocity::new(),
-                TargetVelocity::new(),
+                Position(Vec2::new_random(
+                    &mut rng,
+                    0.0..cfg.width as f32,
+                    0.0..cfg.height as f32,
+                )),
+                Velocity(Vec2::random_dir(&mut rng)),
+                TargetVelocity(Vec2::random_dir(&mut rng)),
                 Speed::new_zero(),
                 TargetSpeed::new_random(10.0, 100.0),
                 Stress::default(),

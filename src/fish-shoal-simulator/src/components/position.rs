@@ -14,30 +14,8 @@
  * limitations under the License.
  */
 
-use rand::{rngs::ThreadRng, Rng};
+use crate::Vec2;
 use shipyard::Component;
 
-#[derive(Component, Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
-pub struct Position {
-    pub x: f32,
-    pub y: f32,
-}
-
-impl Position {
-    pub fn new(x: f32, y: f32) -> Self {
-        Self { x, y }
-    }
-
-    pub fn new_zero() -> Self {
-        Self::new(0.0, 0.0)
-    }
-
-    pub fn new_random(x_low: f32, x_high: f32, y_low: f32, y_high: f32) -> Self {
-        let mut rng: ThreadRng = rand::rng();
-
-        let x: f32 = rng.random_range(x_low..=x_high);
-        let y: f32 = rng.random_range(y_low..=y_high);
-
-        Self::new(x, y)
-    }
-}
+#[derive(Component, Debug)]
+pub struct Position(pub Vec2);

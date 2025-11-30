@@ -14,73 +14,8 @@
  * limitations under the License.
  */
 
-use rand::{rngs::ThreadRng, Rng};
+use crate::Vec2;
 use shipyard::Component;
-use std::ops::{Add, Mul, Sub};
 
-#[derive(Component, Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
-pub struct Velocity {
-    pub dx: f32,
-    pub dy: f32,
-}
-
-impl Add<Velocity> for Velocity {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self {
-            dx: self.dx + rhs.dx,
-            dy: self.dy + rhs.dy,
-        }
-    }
-}
-
-impl Sub<Velocity> for Velocity {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self {
-            dx: self.dx - rhs.dx,
-            dy: self.dy - rhs.dy,
-        }
-    }
-}
-
-impl Mul<f32> for Velocity {
-    type Output = Self;
-
-    fn mul(self, rhs: f32) -> Self::Output {
-        Self {
-            dx: self.dx * rhs,
-            dy: self.dy * rhs,
-        }
-    }
-}
-
-impl Velocity {
-    pub fn new() -> Self {
-        let mut rng: ThreadRng = rand::rng();
-
-        let dx: f32 = rng.random_range(-1.0..=1.0);
-        let dy: f32 = rng.random_range(-1.0..=1.0);
-
-        Self { dx, dy }.normalize()
-    }
-
-    pub fn normalize(&mut self) -> Self {
-        let len: f32 = self.dx.hypot(self.dy);
-
-        if len > 0.0 {
-            self.dx /= len;
-            self.dy /= len;
-        }
-
-        self.clone()
-    }
-
-    pub fn lerp(&mut self, to: &Self, factor: f32) -> Self {
-        let new_vec: Self = *self + (*to - *self) * factor;
-        *self = new_vec;
-        self.normalize()
-    }
-}
+#[derive(Component, Debug)]
+pub struct Velocity(pub Vec2);

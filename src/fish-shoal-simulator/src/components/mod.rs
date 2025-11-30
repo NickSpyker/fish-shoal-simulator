@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-mod alignment_radius;
-mod attraction_radius;
-mod blind_spot;
-mod collision_radius;
 mod fish_identifier;
 mod position;
 mod speed;
@@ -25,7 +21,6 @@ mod stress;
 mod target_speed;
 mod target_velocity;
 mod velocity;
-mod wiggle;
 
 pub use fish_identifier::FishIdentifier;
 pub use position::Position;
