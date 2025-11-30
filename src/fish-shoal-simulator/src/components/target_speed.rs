@@ -15,5 +15,13 @@
  */
 
 use crate::Speed;
+use shipyard::Component;
 
-pub type TargetSpeed = Speed;
+#[derive(Component, Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
+pub struct TargetSpeed(pub Speed);
+
+impl TargetSpeed {
+    pub fn new_random(low: f32, high: f32) -> Self {
+        Self(Speed::new_random(low, high))
+    }
+}

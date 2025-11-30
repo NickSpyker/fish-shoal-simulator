@@ -15,5 +15,13 @@
  */
 
 use crate::Velocity;
+use shipyard::Component;
 
-pub type TargetVelocity = Velocity;
+#[derive(Component, Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
+pub struct TargetVelocity(pub Velocity);
+
+impl TargetVelocity {
+    pub fn new() -> Self {
+        Self(Velocity::new())
+    }
+}

@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+use rand::prelude::ThreadRng;
+use rand::Rng;
 use shipyard::Component;
 
 #[derive(Component, Debug, Copy, Clone, PartialOrd, PartialEq)]
@@ -30,7 +31,21 @@ impl Stress {
         Self(factor)
     }
 
+    pub fn new_random() -> Self {
+        let mut rng: ThreadRng = rand::rng();
+
+        let random_factor: f32 = rng.random_range(0.1..0.5);
+
+        Self::new(random_factor)
+    }
+
     pub fn factor(&self) -> f32 {
         self.0
+    }
+
+    pub fn lerp(&mut self, to: &Self, factor: f32) -> Self {
+        let new_factor: f32 = self.0 + (to.0 - self.0) * factor;
+        self.0 = new_factor;
+        self.clone()
     }
 }

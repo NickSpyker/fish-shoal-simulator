@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use crate::{CalculateDeltaTime, Motion, OutOfBound};
+use crate::{CalculateDeltaTime, LerpToTarget, Motion, OutOfBound, RandomBehavior};
 use shipyard::{
     error::{AddWorkload, RunWorkload}, Workload,
     World,
@@ -36,6 +36,10 @@ impl SystemBundle {
             .with_system(Motion::system)
             .with_barrier()
             .with_system(OutOfBound::system)
+            .with_barrier()
+            .with_system(LerpToTarget::system)
+            .with_barrier()
+            .with_system(RandomBehavior::system)
             .add_to_world(&world)
     }
 }
