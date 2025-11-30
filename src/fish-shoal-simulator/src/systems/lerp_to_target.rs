@@ -18,6 +18,8 @@ use crate::{DeltaTime, Speed, Stress, TargetSpeed, TargetVelocity, Velocity};
 use rayon::prelude::*;
 use shipyard::{IntoIter, UniqueView, View, ViewMut};
 
+const EPSILON: f32 = 0.1;
+
 #[derive(Debug)]
 pub struct LerpToTarget;
 
@@ -41,10 +43,19 @@ impl LerpToTarget {
         )
             .par_iter()
             .for_each(|(vel, target_vel, speed, target_speed, stress)| {
-                let factor: f32 = dt * stress.0.value * 10.0;
+                let factor: f32 = stress.0.value * dt * 5.0;
 
-                vel.0 = vel.0.lerp(target_vel.0, factor);
-                speed.0 = speed.0.lerp(target_speed.0, factor);
+                if (vel.0 - target_vel.0).length() <= EPSILON {
+                    vel.0 = target_vel.0;
+                } else {
+                    vel.0 = vel.0.lerp(target_vel.0, factor);
+                }
+
+                if (speed.0 - target_speed.0).abs().value <= EPSILON {
+                    speed.0 = target_speed.0;
+                } else {
+                    speed.0 = speed.0.lerp(target_speed.0, factor);
+                }
             })
     }
 }

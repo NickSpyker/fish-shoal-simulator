@@ -14,43 +14,50 @@
  * limitations under the License.
  */
 
-use crate::{Config, Scalar, Stress, TargetSpeed, TargetVelocity, Vec2};
+use crate::{Config, Scalar, Speed, Stress, TargetSpeed, TargetVelocity, Vec2, Velocity};
 use rand::{rngs::ThreadRng, Rng};
 use rayon::prelude::*;
-use shipyard::{IntoIter, UniqueView, ViewMut};
+use shipyard::{IntoIter, UniqueView, View, ViewMut};
 
 #[derive(Debug)]
 pub struct RandomBehavior;
 
 impl RandomBehavior {
     pub fn system(
+        velocities: View<Velocity>,
         mut target_velocities: ViewMut<TargetVelocity>,
+        speeds: View<Speed>,
         mut target_speeds: ViewMut<TargetSpeed>,
         mut stress: ViewMut<Stress>,
         cfg: UniqueView<Config>,
     ) {
-        (&mut target_velocities, &mut target_speeds, &mut stress)
+        (
+            &velocities,
+            &mut target_velocities,
+            &speeds,
+            &mut target_speeds,
+            &mut stress,
+        )
             .par_iter()
-            .for_each(|(target_vel, target_speed, stress)| {
+            .for_each(|(vel, target_vel, speed, target_speed, stress)| {
                 let mut rng: ThreadRng = rand::rng();
 
-                if rng.random_bool(cfg.direction_change_prob) {
-                    let random_direction = Vec2::random_dir(&mut rng);
+                if vel.0 == target_vel.0 && rng.random_bool(cfg.direction_change_prob) {
+                    let random_direction: Vec2 = Vec2::random_dir(&mut rng);
                     target_vel.0 = target_vel
                         .0
                         .lerp(random_direction, rng.random_range(0.0..1.0));
                 }
 
-                if rng.random_bool(cfg.speed_change_prob) {
-                    let random_speed = Scalar::new_random(&mut rng, 10.0..100.0);
+                if speed.0 == target_speed.0 && rng.random_bool(cfg.speed_change_prob) {
+                    let random_speed: Scalar = Scalar::new_random(&mut rng, 10.0..100.0);
                     target_speed.0 = target_speed
                         .0
                         .lerp(random_speed, rng.random_range(0.0..1.0));
                 }
 
                 if rng.random_bool(cfg.stress_change_prob) {
-                    let random_stress = Scalar::new_random(&mut rng, 0.1..0.5);
-                    stress.0 = stress.0.lerp(random_stress, rng.random_range(0.0..1.0));
+                    stress.0 = Scalar::new_random(&mut rng, 0.1..0.5);
                 }
             })
     }
