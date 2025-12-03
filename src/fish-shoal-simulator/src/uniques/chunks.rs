@@ -15,13 +15,13 @@
  */
 
 use crate::Vec2;
-use shipyard::Unique;
+use shipyard::{EntityId, Unique};
 use std::collections::{HashMap, HashSet};
 
 #[derive(Unique, Debug, Default)]
 pub struct Chunks {
     chunk_size: f32,
-    chunks: HashMap<u32, HashSet<u32>>,
+    chunks: HashMap<u32, HashSet<EntityId>>,
 }
 
 impl Chunks {
@@ -40,19 +40,19 @@ impl Chunks {
         self.chunk_size = chunk_size;
     }
 
-    pub fn store(&mut self, pos: &Vec2, id: u32) {
+    pub fn store(&mut self, pos: &Vec2, id: EntityId) {
         let chunk_id: u32 = self.chunk_id_from_pos(pos);
 
         let is_unique: bool = self.chunks.entry(chunk_id).or_default().insert(id);
-        debug_assert!(is_unique, "Entity {id} already exists in chunk");
+        debug_assert!(is_unique, "Entity {id:?} already exists in chunk");
     }
 
-    pub fn remove(&mut self, pos: &Vec2, id: u32) {
+    pub fn remove(&mut self, pos: &Vec2, id: EntityId) {
         let chunk_id: u32 = self.chunk_id_from_pos(pos);
 
         if let Some(chunk) = self.chunks.get_mut(&chunk_id) {
             let existed: bool = chunk.remove(&id);
-            debug_assert!(existed, "Entity {id} was not in chunk");
+            debug_assert!(existed, "Entity {id:?} was not in chunk");
 
             if chunk.is_empty() {
                 self.chunks.remove(&chunk_id);
@@ -60,10 +60,10 @@ impl Chunks {
         }
     }
 
-    pub fn load(&self, pos: &Vec2) -> HashSet<u32> {
+    pub fn load(&self, pos: &Vec2) -> HashSet<EntityId> {
         let (chunk_x, chunk_y): (u32, u32) = self.chunk_coords(pos);
 
-        let mut data: HashSet<u32> = HashSet::new();
+        let mut data: HashSet<EntityId> = HashSet::new();
 
         for dx in -1..=1 {
             for dy in -1..=1 {
@@ -109,7 +109,12 @@ impl Chunks {
 mod tests {
     use super::Chunks;
     use crate::Vec2;
+    use shipyard::EntityId;
     use std::collections::HashSet;
+
+    fn mock_id(index: u64) -> EntityId {
+        EntityId::new_from_index_and_gen(index, 0)
+    }
 
     #[test]
     fn chunk_new() {
@@ -125,7 +130,7 @@ mod tests {
         let chunk_size: f32 = 10.0;
         let mut chunks_repository: Chunks = Chunks::new(chunk_size);
         let entity_position: Vec2 = Vec2::new(5.0, 5.0);
-        let entity_identifier: u32 = 1;
+        let entity_identifier: EntityId = mock_id(1);
 
         chunks_repository.store(&entity_position, entity_identifier);
         assert!(!chunks_repository.chunks.is_empty());
@@ -150,13 +155,13 @@ mod tests {
         let chunk_size: f32 = 10.0;
         let mut chunks_repository: Chunks = Chunks::new(chunk_size);
         let entity_position: Vec2 = Vec2::new(15.0, 15.0);
-        let entity_identifier: u32 = 42;
+        let entity_identifier: EntityId = mock_id(42);
 
         let expected_chunk_identifier: u32 = 4;
 
         chunks_repository.store(&entity_position, entity_identifier);
 
-        let stored_chunk: &HashSet<u32> = chunks_repository
+        let stored_chunk: &HashSet<EntityId> = chunks_repository
             .chunks
             .get(&expected_chunk_identifier)
             .expect("Chunk should exist after storage");
@@ -169,7 +174,7 @@ mod tests {
         let chunk_size: f32 = 10.0;
         let mut chunks_repository: Chunks = Chunks::new(chunk_size);
         let entity_position: Vec2 = Vec2::new(5.0, 5.0);
-        let entity_identifier: u32 = 100;
+        let entity_identifier: EntityId = mock_id(100);
 
         chunks_repository.store(&entity_position, entity_identifier);
         chunks_repository.remove(&entity_position, entity_identifier);
@@ -183,19 +188,19 @@ mod tests {
         let mut chunks_repository: Chunks = Chunks::new(chunk_size);
 
         let position_center: Vec2 = Vec2::new(15.0, 15.0);
-        let entity_center_id: u32 = 1;
+        let entity_center_id: EntityId = mock_id(1);
 
         let position_neighbor: Vec2 = Vec2::new(5.0, 15.0);
-        let entity_neighbor_id: u32 = 2;
+        let entity_neighbor_id: EntityId = mock_id(2);
 
         let position_far: Vec2 = Vec2::new(45.0, 45.0);
-        let entity_far_id: u32 = 3;
+        let entity_far_id: EntityId = mock_id(3);
 
         chunks_repository.store(&position_center, entity_center_id);
         chunks_repository.store(&position_neighbor, entity_neighbor_id);
         chunks_repository.store(&position_far, entity_far_id);
 
-        let retrieved_entities: HashSet<u32> = chunks_repository.load(&position_center);
+        let retrieved_entities: HashSet<EntityId> = chunks_repository.load(&position_center);
 
         assert!(retrieved_entities.contains(&entity_center_id));
         assert!(retrieved_entities.contains(&entity_neighbor_id));

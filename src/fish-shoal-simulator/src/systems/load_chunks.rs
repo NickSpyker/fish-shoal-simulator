@@ -33,7 +33,7 @@ impl LoadChunks {
             .iter()
             .with_id()
             .for_each(|(id, pos): (EntityId, &Position)| {
-                chunks.store(&pos.0, id.uindex() as u32);
+                chunks.store(&pos.0, id);
             });
     }
 }
