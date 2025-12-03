@@ -15,9 +15,10 @@
  */
 
 use crate::{
-    algo::SchoolingMechanism, Chunks, Density, Position, Scalar, Social, TargetSpeed, TargetVelocity,
+    algo::SchoolingMechanism, Chunks, Config, Density, Position, Scalar, Social, TargetSpeed, TargetVelocity,
     Vec2,
 };
+use rand::rngs::ThreadRng;
 use shipyard::{EntityId, IntoIter, UniqueView, View, ViewMut};
 use std::collections::{HashMap, HashSet};
 
@@ -44,7 +45,10 @@ impl Swarming {
         mut densities: ViewMut<Density>,
         mut socials: ViewMut<Social>,
         chunks: UniqueView<Chunks>,
+        cfg: UniqueView<Config>,
     ) {
+        let mut rng: ThreadRng = rand::rng();
+
         let others_positions: HashMap<EntityId, Vec2> = collect_components!(positions);
         let others_velocities: HashMap<EntityId, Vec2> = collect_components!(velocities);
         let others_speeds: HashMap<EntityId, Scalar> = collect_components!(speeds);
@@ -76,11 +80,12 @@ impl Swarming {
                     neighbors!(neighbors, others_positions),
                     neighbors!(neighbors, others_velocities),
                     neighbors!(neighbors, others_speeds),
+                    cfg.avoidance_radius,
+                    cfg.alignment_radius,
+                    cfg.attraction_radius,
                 );
 
-                algo.avoidance();
-                algo.alignment();
-                algo.attraction();
+                algo.update(&mut rng);
 
                 algo.set_behavior(&mut vel.0, &mut speed.0);
             });
