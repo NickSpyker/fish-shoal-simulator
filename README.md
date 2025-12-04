@@ -26,6 +26,9 @@
 
 ### Additional Information
 
+The implementation of the algorithm is based on the research document:
+[A Simulation Study on the Schooling Mechanism in Fish by Ichiro AOKI (1981)](./docs/schooling_mechanism_in_fish.pdf)
+
 > The simulation world uses **toroidal wrapping**, meaning that entities exiting one edge of the screen reappear on the opposite edge, so the left and right borders are connected and the top and bottom borders are connected.
 
 ### App Demo
