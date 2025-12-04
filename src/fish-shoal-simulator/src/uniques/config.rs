@@ -30,6 +30,8 @@ pub struct Config {
     pub speed_change_prob: f64,
     pub stress_change_prob: f64,
 
+    pub visual_field: f32,
+
     pub attraction_radius: f32,
     pub alignment_radius: f32,
     pub avoidance_radius: f32,
@@ -49,6 +51,8 @@ impl Default for Config {
             direction_change_prob: 0.1,
             speed_change_prob: 0.05,
             stress_change_prob: 0.001,
+
+            visual_field: 150.0,
 
             attraction_radius: 30.0,
             alignment_radius: 20.0,

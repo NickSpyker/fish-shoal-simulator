@@ -14,22 +14,25 @@
 * limitations under the License.
 */
 
+use super::SchoolingConfig;
 use crate::{Scalar, Vec2};
 use rand::Rng;
 use shipyard::EntityId;
-use std::{cmp::Ordering, collections::HashMap, f32::consts::PI};
+use std::{
+    collections::HashMap,
+    f32::consts::{PI, TAU},
+};
 
-#[derive(Debug, Default)]
+// See ./docs/schooling_mechanism_in_fish.pdf
+#[derive(Debug)]
 pub struct SchoolingMechanism {
     position: Vec2,
     velocity: Vec2,
     speed: Scalar,
     others_positions: HashMap<EntityId, Vec2>,
     others_velocities: HashMap<EntityId, Vec2>,
-    others_speeds: HashMap<EntityId, Scalar>,
-    avoidance_radius: f32,
-    alignment_radius: f32,
-    attraction_radius: f32,
+    // others_speeds: HashMap<EntityId, Scalar>,
+    cfg: SchoolingConfig,
 }
 
 impl SchoolingMechanism {
@@ -39,10 +42,8 @@ impl SchoolingMechanism {
         speed: Scalar,
         others_positions: HashMap<EntityId, Vec2>,
         others_velocities: HashMap<EntityId, Vec2>,
-        others_speeds: HashMap<EntityId, Scalar>,
-        avoidance_radius: f32,
-        alignment_radius: f32,
-        attraction_radius: f32,
+        // others_speeds: HashMap<EntityId, Scalar>,
+        cfg: SchoolingConfig,
     ) -> Self {
         Self {
             position,
@@ -50,197 +51,208 @@ impl SchoolingMechanism {
             speed,
             others_positions,
             others_velocities,
-            others_speeds,
-            avoidance_radius,
-            alignment_radius,
-            attraction_radius,
+            // others_speeds,
+            cfg,
         }
     }
 
     pub fn set_behavior(&self, velocity: &mut Vec2, speed: &mut Scalar) {
         *velocity = self.velocity;
-        *speed = self.speed;
+        *speed = self.speed * 100.0;
     }
 
     pub fn update(&mut self, rng: &mut impl Rng) {
-        const K: f32 = 4.0;
-        const A: f32 = 3.3;
-        const SD1: f32 = 15.0 * (PI / 180.0);
-        const SD2: f32 = 15.0 * (PI / 180.0);
-        const AR: f32 = 150.0 * (PI / 180.0);
-        const RF: f32 = 0.5;
+        // 1. Update Speed (Stochastic Gamma/Erlang Distribution)
+        self.speed = self.generate_random_speed(rng);
 
-        let new_speed: f32 = Self::sample_gamma(rng, K, 1.0 / A);
-        self.speed = Scalar::new(new_speed) * 10.0;
+        // 2. Identify Neighbors in Visual Field
+        struct Candidate {
+            id: EntityId,
+            dist: f32,
+            vec_to: Vec2,
+            angle_diff: f32, // Relative to current heading
+        }
 
-        let current_heading: f32 = f32::atan2(self.velocity.y, self.velocity.x);
+        let current_heading: f32 = self.velocity.y.atan2(self.velocity.x);
+        let visual_limit: f32 = self.cfg.visual_field / 2.0;
 
-        let mut candidates: Vec<(f32, f32, Vec2, Vec2)> = Vec::new();
+        let mut candidates: Vec<Candidate> = Vec::with_capacity(self.others_positions.len());
 
-        for (id, pos) in &self.others_positions {
-            let neighbor_vel: Vec2 = self
-                .others_velocities
-                .get(id)
-                .copied()
-                .unwrap_or(Vec2::ZERO);
+        for (&id, &pos) in &self.others_positions {
+            let vec_to: Vec2 = pos - self.position;
+            let dist: f32 = vec_to.length();
 
-            let to_neighbor: Vec2 = *pos - self.position;
-            let dist: f32 = to_neighbor.length();
-
-            if dist <= 0.0001 {
-                continue;
+            if dist <= 0.001 {
+                continue; // Skip extremely close overlaps
             }
 
-            let angle_to: f32 = f32::atan2(to_neighbor.y, to_neighbor.x);
-            let angle_diff: f32 = Self::angle_difference(current_heading, angle_to);
+            let angle_to: f32 = vec_to.y.atan2(vec_to.x);
+            let angle_diff: f32 = Self::wrap_angle(angle_to - current_heading);
 
-            if dist < self.attraction_radius && angle_diff.abs() < (AR / 2.0) {
-                candidates.push((dist, angle_diff.abs(), *pos, neighbor_vel));
+            // Check if within Visual Field (Angle AR)
+            if angle_diff.abs() <= visual_limit {
+                candidates.push(Candidate {
+                    id,
+                    dist,
+                    vec_to,
+                    angle_diff,
+                });
             }
         }
 
-        let chosen_neighbor: Option<(f32, f32, Vec2, Vec2)> = if !candidates.is_empty() {
-            candidates.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
+        // 3. Determine Reference Individual and Interaction Mode
+        let target_angle: f32;
+        let angle_std_dev: f32;
 
-            Self::select_neighbor_probabilistic(rng, &candidates, RF).copied()
-        } else {
-            let mut far_candidates: Vec<(f32, f32, Vec2, Vec2)> = Vec::new();
+        // Filter for "Sector" (within interaction radius RC)
+        let mut sector_neighbors: Vec<&Candidate> = candidates
+            .iter()
+            .filter(|c| c.dist <= self.cfg.attraction_radius)
+            .collect();
 
-            for (id, pos) in &self.others_positions {
-                let neighbor_vel: Vec2 = self
-                    .others_velocities
-                    .get(id)
-                    .copied()
-                    .unwrap_or(Vec2::ZERO);
+        if !sector_neighbors.is_empty() {
+            // --- CASE A: Neighbors in Sector ---
 
-                let to_neighbor: Vec2 = *pos - self.position;
-                let dist: f32 = to_neighbor.length();
-                if dist <= 0.0001 {
-                    continue;
-                }
+            // Sort by absolute angle difference (closest to current heading first)
+            sector_neighbors
+                .sort_by(|a, b| a.angle_diff.abs().partial_cmp(&b.angle_diff.abs()).unwrap());
 
-                let angle_to: f32 = f32::atan2(to_neighbor.y, to_neighbor.x);
-                let angle_diff: f32 = Self::angle_difference(current_heading, angle_to);
+            // Keep only up to 4 nearest-in-angle neighbors [schooling_mechanism_in_fish.pdf][web:1]
+            let count: usize = sector_neighbors.len().min(4);
+            let top_neighbors: &[&Candidate] = &sector_neighbors[0..count];
 
-                if angle_diff.abs() < (AR / 2.0) {
-                    far_candidates.push((dist, angle_diff.abs(), *pos, neighbor_vel));
-                }
+            // Calculate Weights: W_{j+1} = RF * W_j
+            let rf: f32 = self.cfg.reference_factor;
+            let mut weights: Vec<f32> = Vec::with_capacity(count);
+            let mut weight_sum: f32 = 0.0;
+            let mut current_w: f32 = 1.0;
+
+            for _ in 0..count {
+                weights.push(current_w);
+                weight_sum += current_w;
+                current_w *= rf;
             }
 
-            if !far_candidates.is_empty() {
-                far_candidates
-                    .sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+            // Select Reference Neighbor (Roulette Wheel Selection)
+            let r: f32 = rng.random_range(0.0..weight_sum);
+            let mut acc: f32 = 0.0;
+            let mut selected_idx: usize = 0;
+            for (i, &w) in weights.iter().enumerate() {
+                acc += w;
+                if r <= acc {
+                    selected_idx = i;
+                    break;
+                }
+            }
+            let reference: &Candidate = top_neighbors[selected_idx];
 
-                Self::select_neighbor_probabilistic(rng, &far_candidates, RF).copied()
+            // Determine Interaction based on Distance
+            if reference.dist < self.cfg.avoidance_radius {
+                // -- Avoidance --
+                // Turn 90 degrees away from neighbor
+                // Paper: "depending upon which heading forms the smaller angle"
+                // We effectively want to steer normal to the neighbor's direction relative to us.
+                let neighbor_angle: f32 = reference.vec_to.y.atan2(reference.vec_to.x);
+
+                let turn_left: f32 = Self::wrap_angle(neighbor_angle + PI / 2.0);
+                let turn_right: f32 = Self::wrap_angle(neighbor_angle - PI / 2.0);
+
+                // Choose the turn direction closer to current heading to maintain flow
+                if Self::wrap_angle(turn_left - current_heading).abs()
+                    < Self::wrap_angle(turn_right - current_heading).abs()
+                {
+                    target_angle = turn_left;
+                } else {
+                    target_angle = turn_right;
+                }
+                angle_std_dev = self.cfg.avoidance_attraction_standard_deviation;
+            } else if reference.dist < self.cfg.alignment_radius {
+                // -- Parallel Orientation --
+                // Match neighbor's velocity heading
+                if let Some(other_vel) = self.others_velocities.get(&reference.id) {
+                    target_angle = other_vel.y.atan2(other_vel.x);
+                } else {
+                    // Fallback if velocity missing (shouldn't happen)
+                    target_angle = current_heading;
+                }
+                angle_std_dev = self.cfg.alignment_standard_deviation;
             } else {
-                None
+                // -- Approach -- (Between Alignment and Attraction Radius)
+                // Head towards neighbor
+                target_angle = reference.vec_to.y.atan2(reference.vec_to.x);
+                angle_std_dev = self.cfg.avoidance_attraction_standard_deviation;
             }
+        } else if !candidates.is_empty() {
+            // --- CASE B: No Neighbors in Sector, but some in Visual Cone (Far away) ---
+            // Paper: "approach motion toward a nearer neighbor is set up"
+
+            // Find nearest by distance
+            let nearest: &Candidate = candidates
+                .iter()
+                .min_by(|a, b| a.dist.partial_cmp(&b.dist).unwrap())
+                .unwrap();
+
+            target_angle = nearest.vec_to.y.atan2(nearest.vec_to.x);
+            angle_std_dev = self.cfg.avoidance_attraction_standard_deviation;
+        } else {
+            // --- CASE C: No Neighbors Visible ---
+            // Random movement (Independent)
+            target_angle = rng.random_range(0.0..TAU);
+            angle_std_dev = 0.0; // No deviation on random walk, just pick one
+        }
+
+        // 4. Apply Gaussian Noise to Direction
+        let final_angle: f32 = if angle_std_dev > 0.0 {
+            // Box-Muller or similar for Normal Distribution
+            // Standard Rust `rand` doesn't have `gen_normal` easily without `rand_distr`.
+            // We approximate or use Box-Muller manually.
+            let u1: f32 = rng.random_range(0.0..1.0);
+            let u2: f32 = rng.random_range(0.0..1.0);
+
+            // Standard Normal Z
+            let z: f32 = (-2.0 * u1.ln()).sqrt() * (2.0 * PI * u2).cos();
+
+            target_angle + z * angle_std_dev
+        } else {
+            target_angle
         };
 
-        let new_dir_angle: f32 = if let Some((dist, _, pos, vel)) = chosen_neighbor {
-            let to_neighbor: Vec2 = pos - self.position;
-            let angle_to_neighbor: f32 = f32::atan2(to_neighbor.y, to_neighbor.x);
-
-            if dist < self.avoidance_radius {
-                let a1: f32 = angle_to_neighbor + PI / 2.0;
-                let a2: f32 = angle_to_neighbor - PI / 2.0;
-
-                let diff1: f32 = Self::angle_difference(current_heading, a1).abs();
-                let diff2: f32 = Self::angle_difference(current_heading, a2).abs();
-                let target_mean: f32 = if diff1 < diff2 { a1 } else { a2 };
-
-                Self::sample_normal(rng, target_mean, SD1)
-            } else if dist < self.alignment_radius {
-                let neighbor_heading: f32 = f32::atan2(vel.y, vel.x);
-                Self::sample_normal(rng, neighbor_heading, SD2)
-            } else {
-                Self::sample_normal(rng, angle_to_neighbor, SD1)
-            }
-        } else {
-            rng.random_range(0.0..2.0 * PI)
-        };
-
-        let (sin, cos): (f32, f32) = new_dir_angle.sin_cos();
-        self.velocity = Vec2::new(cos, sin) * self.speed.value;
+        // 5. Update Velocity Vector (Normalized)
+        let (sin, cos): (f32, f32) = final_angle.sin_cos();
+        self.velocity = Vec2::new(cos, sin);
+        // Ensure it is normalized (though sin/cos is unit length)
+        self.velocity.normalize();
     }
 
-    fn angle_difference(a: f32, b: f32) -> f32 {
-        let mut diff: f32 = b - a;
-        while diff > PI {
-            diff -= 2.0 * PI;
+    fn generate_random_speed(&self, rng: &mut impl Rng) -> Scalar {
+        let k: i32 = self.cfg.gamma_dist_k as i32;
+        let a: f32 = self.cfg.gamma_dist_a;
+
+        if k <= 0 {
+            return Scalar::ZERO;
         }
-        while diff < -PI {
-            diff += 2.0 * PI;
+
+        // Erlang distribution generation (Sum of K exponential)
+        // X = -1/A * ln( product(U_i) )
+        let mut log_prod: f32 = 0.0;
+        for _ in 0..k {
+            let u: f32 = rng.random_range(1e-6..1.0); // Avoid log(0)
+            log_prod += u.ln();
         }
-        diff
+
+        let speed_val: f32 = -log_prod / a;
+        Scalar::new(speed_val)
     }
 
-    fn select_neighbor_probabilistic<'a, T>(
-        rng: &mut impl Rng,
-        candidates: &'a [T],
-        rf: f32,
-    ) -> Option<&'a T> {
-        let n: usize = candidates.len();
-        if n == 0 {
-            return None;
+    #[inline]
+    fn wrap_angle(angle: f32) -> f32 {
+        let mut a: f32 = angle;
+        while a > PI {
+            a -= TAU;
         }
-
-        let mut weights: Vec<f32> = Vec::with_capacity(n);
-        let mut sum_w: f32 = 0.0;
-        let mut w: f32 = 1.0;
-        for _ in 0..n {
-            weights.push(w);
-            sum_w += w;
-            w *= rf;
+        while a < -PI {
+            a += TAU;
         }
-
-        let r: f32 = rng.random_range(0.0..sum_w);
-        let mut accum: f32 = 0.0;
-        for (i, &weight) in weights.iter().enumerate() {
-            accum += weight;
-            if r < accum {
-                return Some(&candidates[i]);
-            }
-        }
-        Some(&candidates[n - 1])
-    }
-
-    fn sample_gamma(rng: &mut impl Rng, k: f32, theta: f32) -> f32 {
-        if k < 1.0 {
-            return Self::sample_gamma(rng, k + 1.0, theta)
-                * rng.random_range(0.0f32..1.0f32).powf(1.0 / k);
-        }
-
-        let d: f32 = k - 1.0 / 3.0;
-        let c: f32 = 1.0 / (9.0 * d).sqrt();
-
-        loop {
-            let x: f32 = Self::sample_normal_std(rng);
-            let v_term: f32 = 1.0 + c * x;
-            if v_term <= 0.0 {
-                continue;
-            }
-
-            let v: f32 = v_term * v_term * v_term;
-            let u: f32 = rng.random_range(0.0f32..1.0f32);
-
-            if u < 1.0 - 0.0331 * x * x * x * x {
-                return d * v * theta;
-            }
-            if u.ln() < 0.5 * x * x + d * (1.0 - v + v.ln()) {
-                return d * v * theta;
-            }
-        }
-    }
-
-    fn sample_normal(rng: &mut impl Rng, mean: f32, std: f32) -> f32 {
-        mean + Self::sample_normal_std(rng) * std
-    }
-
-    fn sample_normal_std(rng: &mut impl Rng) -> f32 {
-        let u1: f32 = rng.random_range(0.0f32..1.0f32);
-        let u2: f32 = rng.random_range(0.0f32..1.0f32);
-        let u1: f32 = if u1 < 1e-10 { 1e-10 } else { u1 };
-        (-2.0 * u1.ln()).sqrt() * (2.0 * PI * u2).cos()
+        a
     }
 }

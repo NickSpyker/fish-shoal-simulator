@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+mod schooling_config;
 mod schooling_mechanism;
 
+pub use schooling_config::SchoolingConfig;
 pub use schooling_mechanism::SchoolingMechanism;
