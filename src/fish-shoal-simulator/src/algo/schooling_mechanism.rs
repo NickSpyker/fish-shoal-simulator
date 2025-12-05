@@ -54,7 +54,7 @@ impl SchoolingMechanism {
 
     pub fn set_behavior(&self, velocity: &mut Vec2, speed: &mut Scalar) {
         *velocity = self.velocity;
-        *speed = self.speed * 100.0;
+        *speed = self.speed;
     }
 
     pub fn avoidance(&mut self) -> bool {
