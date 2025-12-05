@@ -30,32 +30,36 @@ impl Simulation {
             let rect: Rect = ui.max_rect();
             app.screen = rect.size();
 
-            let area: Rect = Self::build_area(app, rect);
-
             let painter: Painter = ui.painter_at(rect);
-            painter.rect_stroke(
-                area,
-                0.0,
-                Stroke::new(1.0, Color32::WHITE),
-                StrokeKind::Middle,
-            );
 
+            let area: Rect = Self::build_area(app, rect, &painter);
             Self::build_grid(app, area, &painter);
 
+            app.config.mouse_pos = Self::get_mouse_position(ctx, area);
+
             if let Ok(output) = app.data_receiver.recv() {
-                Entities::render_all(painter, output, area.left_top());
+                Entities::render(painter, output, area.left_top());
             }
         });
     }
 
-    fn build_area(app: &mut FishShoalGui, rect: Rect) -> Rect {
+    fn build_area(app: &mut FishShoalGui, rect: Rect, painter: &Painter) -> Rect {
         let margin_hor: f32 = (app.screen.x - app.config.width as f32) / 2.0;
         let margin_ver: f32 = (app.screen.y - app.config.height as f32) / 2.0;
 
-        Rect::from_min_size(
+        let area: Rect = Rect::from_min_size(
             Pos2::new(rect.min.x + margin_hor, rect.min.y + margin_ver),
             Vec2::new(app.config.width as f32, app.config.height as f32),
-        )
+        );
+
+        painter.rect_stroke(
+            area,
+            0.0,
+            Stroke::new(1.0, Color32::WHITE),
+            StrokeKind::Middle,
+        );
+
+        area
     }
 
     fn build_grid(app: &mut FishShoalGui, area: Rect, painter: &Painter) {
@@ -73,5 +77,15 @@ impl Simulation {
             painter.line_segment([Pos2::new(area.min.x, y), Pos2::new(area.max.x, y)], stroke);
             y += cell_size;
         }
+    }
+
+    fn get_mouse_position(ctx: &Context, area: Rect) -> Option<[f32; 2]> {
+        if let Some(mouse_pos) = ctx.pointer_hover_pos() {
+            if area.contains(mouse_pos) {
+                let relative_pos: Vec2 = mouse_pos - area.min;
+                return Some([relative_pos.x, relative_pos.y]);
+            }
+        }
+        None
     }
 }

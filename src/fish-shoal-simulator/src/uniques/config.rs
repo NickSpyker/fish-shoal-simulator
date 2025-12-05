@@ -18,6 +18,8 @@ use shipyard::Unique;
 
 #[derive(Unique, Debug, Copy, Clone, PartialEq)]
 pub struct Config {
+    pub mouse_pos: Option<[f32; 2]>,
+
     pub running: bool,
     pub paused: bool,
 
@@ -40,6 +42,8 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
+            mouse_pos: None,
+
             running: true,
             paused: false,
 

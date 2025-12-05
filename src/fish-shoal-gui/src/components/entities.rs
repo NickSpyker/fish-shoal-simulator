@@ -24,7 +24,7 @@ use fish_shoal_simulator::SimulatorOutput;
 pub struct Entities;
 
 impl Entities {
-    pub fn render_all(painter: Painter, data: SimulatorOutput, origin: Pos2) {
+    pub fn render(painter: Painter, data: SimulatorOutput, origin: Pos2) {
         for i in 0..data.positions.len() {
             Self::render_entity(i, &painter, &data, origin);
         }
@@ -33,35 +33,39 @@ impl Entities {
     fn render_entity(idx: usize, painter: &Painter, data: &SimulatorOutput, origin: Pos2) {
         let position: [f32; 2] = data.positions[idx];
         let velocity: [f32; 2] = data.velocities[idx];
-        let speed: f32 = data.speeds[idx];
         let density: usize = data.densities[idx];
+        let speed: f32 = data.speeds[idx];
 
-        let screen_pos: Pos2 = origin + Vec2::new(position[0], position[1]);
+        let position: Pos2 = origin + Vec2::new(position[0], position[1]);
         let color: Color32 = Self::density_to_color(density);
 
         if speed > 0.1 {
-            let vel_vec: Vec2 = Vec2::new(velocity[0], velocity[1]);
+            let velocity: Vec2 = Vec2::new(velocity[0], velocity[1]);
+            let direction: Vec2 = velocity.normalized();
 
-            let direction: Vec2 = vel_vec.normalized();
+            let right: Vec2 = Vec2::new(direction.y, -direction.x);
 
-            let size: f32 = 6.0;
-            let width: f32 = 3.0;
+            let head_radius: f32 = 3.0;
+            let length: f32 = 9.0;
 
-            let nose: Pos2 = screen_pos + direction * size;
+            let head_center: Pos2 = position + direction * (length * 0.2);
+            let tail_tip: Pos2 = head_center - direction * (length * 0.8);
 
-            let right: Vec2 = Vec2::new(direction.y, -direction.x) * width;
-            let tail_base: Pos2 = screen_pos - direction * (size * 0.5);
+            let diag_right: Vec2 = (direction + right).normalized();
+            let diag_left: Vec2 = (direction - right).normalized();
 
-            let corner_left: Pos2 = tail_base - right;
-            let corner_right: Pos2 = tail_base + right;
+            let points: Vec<Pos2> = vec![
+                tail_tip,
+                head_center + right * head_radius,
+                head_center + diag_right * head_radius,
+                head_center + direction * head_radius,
+                head_center + diag_left * head_radius,
+                head_center - right * head_radius,
+            ];
 
-            painter.add(Shape::convex_polygon(
-                vec![nose, corner_right, corner_left],
-                color,
-                Stroke::NONE,
-            ));
+            painter.add(Shape::convex_polygon(points, color, Stroke::NONE));
         } else {
-            painter.circle_filled(screen_pos, 2.0, color);
+            painter.circle_filled(position, 2.0, color);
         }
     }
 
