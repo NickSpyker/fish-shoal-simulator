@@ -141,6 +141,19 @@ impl SideBar {
                     .attraction_radius
                     .clamp(app.config.alignment_radius + 1.0, 100.0);
 
+                ui.separator();
+                ui.heading(RichText::new("Shoal behavior fov").size(14.0));
+                ui.add(
+                    Slider::new(&mut app.config.attraction_fov, 0.0..=360.0)
+                        .suffix("°")
+                        .text("Attraction"),
+                );
+                ui.add(
+                    Slider::new(&mut app.config.alignment_fov, 0.0..=360.0)
+                        .suffix("°")
+                        .text("Alignment"),
+                );
+
                 ui.vertical(|sub_ui| {
                     let rect: Rect = sub_ui.max_rect();
                     AlgoRadiusFov::render(
