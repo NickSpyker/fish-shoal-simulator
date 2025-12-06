@@ -15,7 +15,7 @@
  */
 
 use crate::{
-    algo::SchoolingMechanism, Chunks, Config, Density, /* Scalar, */ Position, Social, Stress,
+    algo::SchoolingMechanism, /* Scalar, */ Chunks, Config, Density, Position, Social, Stress,
     TargetSpeed, TargetVelocity, Vec2,
 };
 use shipyard::{EntityId, IntoIter, UniqueView, View, ViewMut};
@@ -79,6 +79,15 @@ impl Swarming {
                     return;
                 }
                 social.set_grouped();
+
+                let close_neighbors_count: usize = neighbors
+                    .iter()
+                    .filter(|&neighbor_id| {
+                        let neighbor_position: Vec2 = others_positions[neighbor_id];
+                        pos.0.distance(neighbor_position) <= cfg.alignment_radius
+                    })
+                    .count();
+                density.set(close_neighbors_count);
 
                 let mut algo: SchoolingMechanism = SchoolingMechanism::setup(
                     pos.0,
