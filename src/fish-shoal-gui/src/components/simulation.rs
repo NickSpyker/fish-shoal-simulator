@@ -20,6 +20,7 @@ use eframe::{
     epaint::{Color32, Stroke, StrokeKind},
     Frame,
 };
+#[cfg(debug_assertions)]
 use fish_shoal_simulator::SimulatorOutput;
 
 pub struct Simulation;
